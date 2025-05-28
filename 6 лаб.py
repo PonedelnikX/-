@@ -1,14 +1,7 @@
 import timeit
 import pandas as pd
 import matplotlib.pyplot as plt
-
-def factorial(k):
-    res = 1
-    for i in range(2, k + 1):
-        res *= i
-    return res
-
-
+from math import factorial  
 from functools import lru_cache
 
 @lru_cache(maxsize=None)
