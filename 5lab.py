@@ -1,7 +1,7 @@
 import timeit
 from itertools import combinations
 
-# Первая часть: алгоритмический перебор всех сочетаний
+
 def algorithmic_method(players, team_size):
     result = []
     team = []
@@ -18,11 +18,11 @@ def algorithmic_method(players, team_size):
     backtrack(0)
     return result
 
-# Первая часть: использование itertools.combinations
+
 def python_method(players, team_size):
     return list(combinations(players, team_size))
 
-# Вторая часть: алгоритмический перебор с ограничением минимум 2 профессионала и отсечкой
+
 def algorithmic_method_with_constraint(players, team_size, professionals, min_pros=2):
     result = []
     team = []
@@ -30,7 +30,7 @@ def algorithmic_method_with_constraint(players, team_size, professionals, min_pr
     def backtrack(start, pros_count):
         remaining = team_size - len(team)
         possible_pros_left = sum(1 for p in players[start:] if p in professionals)
-        # Отсечка: если даже взяв всех оставшихся профи, не достигнем min_pros
+        
         if pros_count + possible_pros_left < min_pros:
             return
 
@@ -48,7 +48,7 @@ def algorithmic_method_with_constraint(players, team_size, professionals, min_pr
     backtrack(0, 0)
     return result
 
-# Вторая часть: itertools с фильтрацией по ограничению
+
 def python_method_with_constraint(players, team_size, professionals, min_pros=2):
     all_combs = combinations(players, team_size)
     filtered = [comb for comb in all_combs if sum(1 for p in comb if p in professionals) >= min_pros]
