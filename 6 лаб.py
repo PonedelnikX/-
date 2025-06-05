@@ -3,18 +3,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from math import factorial  
 
-# Рекурсивные функции без lru_cache
+
 def rec_F(n):
     if n == 1:
         return 1
-    # Знак (-1)^n через чётность n
+    
     sign = -1 if (n % 2 == 1) else 1
     return sign * (3 * rec_F(n - 1) - 3 * rec_G(n - 1))
 
 def rec_G(n):
     if n == 1:
         return 1
-    #  вычисления факториала
+
     return (rec_F(n - 1) + 2 * rec_G(n - 1)) / factorial(2 * n)
 
 def iter_F(n):
