@@ -1,97 +1,85 @@
+import itertools
 import timeit
-from itertools import combinations
 
 
-def algorithmic_method(players, team_size):
-    result = []
-    team = []
-
-    def backtrack(start):
-        if len(team) == team_size:
-            result.append(team.copy())
-            return
-        for i in range(start, len(players)):
-            team.append(players[i])
-            backtrack(i + 1)
-            team.pop()
-
-    backtrack(0)
-    return result
+def alg_teams(lst):
+    n = len(lst)
+    res = []
+    for i in range(n - 3):
+        for j in range(i + 1, n - 2):
+            for k in range(j + 1, n - 1):
+                for l in range(k + 1, n):
+                    res.append([lst[i], lst[j], lst[k], lst[l]])
+    return res
 
 
-def python_method(players, team_size):
-    return list(combinations(players, team_size))
+def py_teams(lst):
+    return list(itertools.combinations(lst, 4))
 
 
-def algorithmic_method_with_constraint(players, team_size, professionals, min_pros=2):
-    result = []
-    team = []
+pros = [("P1", 93), ("P2", 81), ("P3", 80), ("P4", 88), ("P5", 85)]
+ams  = [("A1", 72), ("A2", 71), ("A3", 65), ("A4", 48), ("A5", 75)]
+players = pros + ams
 
-    def backtrack(start, pros_count):
-        remaining = team_size - len(team)
-        possible_pros_left = sum(1 for p in players[start:] if p in professionals)
-        
-        if pros_count + possible_pros_left < min_pros:
-            return
-
-        if len(team) == team_size:
-            if pros_count >= min_pros:
-                result.append(team.copy())
-            return
-
-        for i in range(start, len(players)):
-            player = players[i]
-            team.append(player)
-            backtrack(i + 1, pros_count + (1 if player in professionals else 0))
-            team.pop()
-
-    backtrack(0, 0)
-    return result
+teams_alg = alg_teams(players)
+teams_py  = py_teams(players)
 
 
-def python_method_with_constraint(players, team_size, professionals, min_pros=2):
-    all_combs = combinations(players, team_size)
-    filtered = [comb for comb in all_combs if sum(1 for p in comb if p in professionals) >= min_pros]
-    return filtered
+print("=== Первые 10 команд (алгоритмический способ) ===")
+for t in teams_alg[:10]:
+    print([p[0] for p in t])
 
-if __name__ == "__main__":
-    professionals = [f'P{i}' for i in range(1, 6)]
-    amateurs = [f'A{i}' for i in range(1, 6)]
-    players = professionals + amateurs
-    team_size = 4
 
-    print("=== Первая часть: без ограничений ===")
+print("\n=== Первые 10 команд (itertools.combinations) ===")
+for t in teams_py[:10]:
+    print([p[0] for p in t])
 
-    t_alg = timeit.timeit(lambda: algorithmic_method(players, team_size), number=2)
-    alg_res = algorithmic_method(players, team_size)
+# Сколько всего команд
+total_combinations = len(teams_alg)  
+print(f"\nВсего различных команд: {total_combinations}")  
 
-    t_py = timeit.timeit(lambda: python_method(players, team_size), number=2)
-    py_res = python_method(players, team_size)
+# Замер времени (каждый вариант запускаем 10 000 раз для усреднения)
+alg_time = timeit.timeit(lambda: alg_teams(players), number=10_000)
+py_time  = timeit.timeit(lambda: py_teams(players),  number=10_000)
 
-    print(f"Алгоритмический метод: найдено {len(alg_res)} команд, время {t_alg:.6f} сек")
-    print("Первые 5 команд:")
-    for team in alg_res[:5]:
-        print(team)
+print("\n=== Среднее время за один прогон (из 10 000 повторов) ===")
+print(f"Алгоритмический 4-цикла  : {alg_time/10_000:.8f} сек")
+print(f"itertools.combinations   : {py_time/10_000:.8f} сек")
 
-    print(f"\nМетод с использованием itertools: найдено {len(py_res)} команд, время {t_py:.6f} сек")
-    print("Первые 5 команд:")
-    for team in py_res[:5]:
-        print(team)
 
-    print("\n=== Вторая часть: минимум 2 профессионала в команде с отсечкой ===")
 
-    t_alg_c = timeit.timeit(lambda: algorithmic_method_with_constraint(players, team_size, professionals), number=2)
-    alg_res_c = algorithmic_method_with_constraint(players, team_size, professionals)
 
-    t_py_c = timeit.timeit(lambda: python_method_with_constraint(players, team_size, professionals), number=2)
-    py_res_c = python_method_with_constraint(players, team_size, professionals)
+SKILL_CAP = 300     
+MAX_SAME_TYPE = 3   
 
-    print(f"Алгоритмический метод с ограничением: найдено {len(alg_res_c)} команд, время {t_alg_c:.6f} сек")
-    print("Первые 5 команд:")
-    for team in alg_res_c[:5]:
-        print(team)
+feasible = []
+for combo in teams_py: 
+    pros_cnt = sum(1 for p in combo if p in pros)
+    ams_cnt  = 4 - pros_cnt
+    total    = sum(p[1] for p in combo)
+ 
+    if pros_cnt <= MAX_SAME_TYPE and ams_cnt <= MAX_SAME_TYPE and total <= SKILL_CAP:
+        feasible.append((combo, total, pros_cnt, ams_cnt))
 
-    print(f"\nМетод с использованием itertools с ограничением: найдено {len(py_res_c)} команд, время {t_py_c:.6f} сек")
-    print("Первые 5 команд:")
-    for team in py_res_c[:5]:
-        print(team)
+
+feasible_count = len(feasible)
+eliminated = total_combinations - feasible_count
+reduction_pct = eliminated / total_combinations * 100
+
+
+print("\n=== Первые 10 команд, удовлетворяющих ограничениям ===")
+for combo, total, pc, ac in feasible[:10]:
+    names = [p[0] for p in combo]
+    print(f"{names} → суммарный скилл: {total}, профи: {pc}, любители: {ac}")
+
+
+print(f"\nКоличество вариантов, удовлетворяющих ограничениям: {feasible_count}")
+print(f"Исключено вариантов: {eliminated} из {total_combinations} "
+      f"({reduction_pct:.1f}% сокращение)")
+
+
+best_total = max(total for _, total, _, _ in feasible)
+
+best_combo = next(rec for rec in feasible if rec[1] == best_total)[0]
+best_names = [p[0] for p in best_combo]
+print(f"\nСамый лучший вариант (суммарный скилл = {best_total}): {best_names}")
