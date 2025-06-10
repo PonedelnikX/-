@@ -7,64 +7,58 @@ from math import factorial
 def rec_F(n):
     if n == 1:
         return 1
-    
     sign = -1 if (n % 2 == 1) else 1
     return sign * (3 * rec_F(n - 1) - 3 * rec_G(n - 1))
+
 
 def rec_G(n):
     if n == 1:
         return 1
-
     return (rec_F(n - 1) + 2 * rec_G(n - 1)) / factorial(2 * n)
 
-def iter_F(n):
-    F = [0] * (n + 1)
-    G = [0] * (n + 1)
-    F[1] = 1
-    G[1] = 1
 
-
-    accumulated_fact = factorial(2)  # = 2
+def iter_F_optimized(n):
+    F_prev = 1  
+    G_prev = 1  
+    accumulated_fact = factorial(2)  
 
     for k in range(2, n + 1):
-
         accumulated_fact *= (2 * k - 1) * (2 * k)
-
-
         sign = -1 if (k % 2 == 1) else 1
 
-        F[k] = sign * (3 * F[k - 1] - 3 * G[k - 1])
-        G[k] = (F[k - 1] + 2 * G[k - 1]) / accumulated_fact
+        F_curr = sign * (3 * F_prev - 3 * G_prev)
+        G_curr = (F_prev + 2 * G_prev) / accumulated_fact
 
-    return F[n]
+        F_prev, G_prev = F_curr, G_curr
 
-def iter_G(n):
-    F = [0] * (n + 1)
-    G = [0] * (n + 1)
-    F[1] = 1
-    G[1] = 1
+    return F_prev
 
+
+def iter_G_optimized(n):
+    F_prev = 1
+    G_prev = 1
     accumulated_fact = factorial(2)
 
     for k in range(2, n + 1):
         accumulated_fact *= (2 * k - 1) * (2 * k)
         sign = -1 if (k % 2 == 1) else 1
 
-        F[k] = sign * (3 * F[k - 1] - 3 * G[k - 1])
-        G[k] = (F[k - 1] + 2 * G[k - 1]) / accumulated_fact
+        F_curr = sign * (3 * F_prev - 3 * G_prev)
+        G_curr = (F_prev + 2 * G_prev) / accumulated_fact
 
-    return G[n]
+        F_prev, G_prev = F_curr, G_curr
 
-if __name__ == '__main__':
+    return G_prev
+
+
+if name == '__main__':
     ns = list(range(1, 18))
     results = []
 
     for n in ns:
-
         t_rec = timeit.timeit(lambda: rec_F(n), number=5)
-        t_it  = timeit.timeit(lambda: iter_F(n), number=5)
-
-        results.append((n, rec_F(n), iter_F(n), t_rec, t_it))
+        t_it = timeit.timeit(lambda: iter_F_optimized(n), number=5)
+        results.append((n, rec_F(n), iter_F_optimized(n), t_rec, t_it))
 
     df = pd.DataFrame(
         results,
