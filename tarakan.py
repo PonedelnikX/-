@@ -46,7 +46,6 @@ root.title("Таракан ищет выход 🐜")
 canvas = tk.Canvas(root, width=M*CELL_SIZE, height=N*CELL_SIZE, bg='white')
 canvas.pack()
 
-
 COLOR_WALL = 'black'
 COLOR_PATH = 'white'
 COLOR_VISITED = '#cccccc'
@@ -62,7 +61,6 @@ final_path = []
 
 def draw():
     canvas.delete("all")
-
     for r in range(N):
         for c in range(M):
             x1, y1 = c * CELL_SIZE, r * CELL_SIZE
@@ -74,12 +72,8 @@ def draw():
                     canvas.create_rectangle(x1, y1, x2, y2, fill=COLOR_VISITED, outline='gray')
                 else:
                     canvas.create_rectangle(x1, y1, x2, y2, fill=COLOR_PATH, outline='gray')
-
     for r, c in final_path:
-        x1, y1 = c * CELL_SIZE, r * CELL_SIZE
-        x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
-        canvas.create_rectangle(x1, y1, x2, y2, fill=COLOR_PATH_FINAL, outline='orange')
-
+        canvas.create_rectangle(c*CELL_SIZE, r*CELL_SIZE, (c+1)*CELL_SIZE, (r+1)*CELL_SIZE, fill=COLOR_PATH_FINAL, outline='orange')
     sr, sc = start
     er, ec = exit_pos
     canvas.create_rectangle(sc*CELL_SIZE, sr*CELL_SIZE, (sc+1)*CELL_SIZE, (sr+1)*CELL_SIZE, fill=COLOR_START, outline='darkgreen')
@@ -88,21 +82,23 @@ def draw():
 def step():
     global found, final_path
     if found:
-        return
+        return  
+
     if not search_stack:
+        print("Выход не найден!")
         return
 
     r, c = search_stack.pop()
 
     if (r, c) == exit_pos:
         found = True
-
+    
         cur = exit_pos
         while cur != start:
             final_path.append(cur)
             cur = parent[cur]
         draw()
-        return
+        return  
 
     for dr, dc in [(0,1), (1,0), (0,-1), (-1,0)]:
         nr, nc = r + dr, c + dc
