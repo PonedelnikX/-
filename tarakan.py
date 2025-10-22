@@ -1,7 +1,6 @@
 ''' Tarakashka ishet vihod '''
-
 import random
-import matplotlib.pyplot as plt
+import tkinter as tk
 
 N, M = 14, 14
 
@@ -41,37 +40,80 @@ if exit_row is None:
 maze[exit_row][M-1] = 0
 exit_pos = (exit_row, M-1)
 
-stack = [start]
+CELL_SIZE = 30
+root = tk.Tk()
+root.title("Таракан ищет выход 🐜")
+canvas = tk.Canvas(root, width=M*CELL_SIZE, height=N*CELL_SIZE, bg='white')
+canvas.pack()
+
+
+COLOR_WALL = 'black'
+COLOR_PATH = 'white'
+COLOR_VISITED = '#cccccc'
+COLOR_PATH_FINAL = 'yellow'
+COLOR_START = 'green'
+COLOR_EXIT = 'red'
+
+search_stack = [start]
 visited_search = {start}
 parent = {start: None}
+found = False
+final_path = []
 
-while stack:
-    r, c = stack.pop()
+def draw():
+    canvas.delete("all")
+
+    for r in range(N):
+        for c in range(M):
+            x1, y1 = c * CELL_SIZE, r * CELL_SIZE
+            x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
+            if maze[r][c] == 1:
+                canvas.create_rectangle(x1, y1, x2, y2, fill=COLOR_WALL, outline='gray')
+            else:
+                if (r, c) in visited_search:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill=COLOR_VISITED, outline='gray')
+                else:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill=COLOR_PATH, outline='gray')
+
+    for r, c in final_path:
+        x1, y1 = c * CELL_SIZE, r * CELL_SIZE
+        x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
+        canvas.create_rectangle(x1, y1, x2, y2, fill=COLOR_PATH_FINAL, outline='orange')
+
+    sr, sc = start
+    er, ec = exit_pos
+    canvas.create_rectangle(sc*CELL_SIZE, sr*CELL_SIZE, (sc+1)*CELL_SIZE, (sr+1)*CELL_SIZE, fill=COLOR_START, outline='darkgreen')
+    canvas.create_rectangle(ec*CELL_SIZE, er*CELL_SIZE, (ec+1)*CELL_SIZE, (er+1)*CELL_SIZE, fill=COLOR_EXIT, outline='darkred')
+
+def step():
+    global found, final_path
+    if found:
+        return
+    if not search_stack:
+        return
+
+    r, c = search_stack.pop()
+
     if (r, c) == exit_pos:
-        break
+        found = True
+
+        cur = exit_pos
+        while cur != start:
+            final_path.append(cur)
+            cur = parent[cur]
+        draw()
+        return
+
     for dr, dc in [(0,1), (1,0), (0,-1), (-1,0)]:
         nr, nc = r + dr, c + dc
         if 0 <= nr < N and 0 <= nc < M and maze[nr][nc] == 0 and (nr, nc) not in visited_search:
             visited_search.add((nr, nc))
             parent[(nr, nc)] = (r, c)
-            stack.append((nr, nc))
+            search_stack.append((nr, nc))
 
-final_path = []
-cur = exit_pos
-while cur != start:
-    final_path.append(cur)
-    cur = parent[cur]
+    draw()
+    root.after(80, step)
 
-plt.figure(figsize=(5,5))
-plt.imshow(maze, cmap='binary', origin='upper')  # 1=чёрный, 0=белый
-
-if final_path:
-    ys, xs = zip(*final_path)
-    plt.plot(xs, ys, color='yellow', linewidth=6, solid_capstyle='round')
-
-plt.plot(start[1], start[0], 's', color='green', markersize=12)
-plt.plot(exit_pos[1], exit_pos[0], 's', color='red', markersize=12)
-
-plt.axis('off')
-plt.tight_layout()
-plt.show()
+draw()
+root.after(500, step)
+root.mainloop()
